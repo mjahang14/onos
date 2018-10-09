@@ -1,54 +1,61 @@
 #!groovy
 
-pipeline {
+node { /* This is required to distribute the work to nodes */
+	def app
+	
+     stage('Clone Repo') {
+	/* checkout the code to build */
+	checkout scm
+     }
 
-    agent any
-
-    stages {
-        stage('pull') {
-            steps {
-                git url: 'https://gerrit.onosproject.org/onos'
-            }
-        }
-
-        stage('build') {
+        stage('build ONOS') {
             steps {
                 sh '''#!/bin/bash -l
                     ONOS_ROOT=`pwd`
                     source tools/build/envDefaults
-                    onos-buck build onos
+                    bazel build onos
                 '''
             }
         }
-
-        stage('test') {
-            steps {
-                parallel (
+	
+     stage('Unit Test image') {
+        /* Ideally, we would run a test framework against our image.
+         * For this example, we're using a Volkswagen-type approach ;-) */
+		 steps {
+		 	parallel (
                     "unit-tests": {
                         sh '''#!/bin/bash -l
                             ONOS_ROOT=`pwd`
                             source tools/build/envDefaults
-                            onos-buck test
+                            bazel query 'tests(//...)' | xargs bazel test
                         '''
                     },
                     "javadocs": {
                         sh '''#!/bin/bash -l
                             ONOS_ROOT=`pwd`
                             source tools/build/envDefaults
-                            onos-buck build //docs:external //docs:internal --show-output
+                            bazel build //docs:external //docs:internal --show-output
                         '''
                     },
-                    "docker-image": {
-                        sh '''#!/bin/bash -l
-                            ONOS_ROOT=`pwd`
-                            source tools/build/envDefaults
-                            docker build -t onosproject/onos-test-docker .
-                        '''
-                    },
-                )
-            }
-        }
+			)
+		 }
+    }
+	
+    stage('Build docker image') {
+        /* This builds the actual image; synonymous to
+         * docker build on the command line */
+
+        app = docker.build("mohdjahangir/onos-dev")
     }
 
+    stage('Push image') {
+        /* Finally, we'll push the image with two tags:
+         * First, the incremental build number from Jenkins
+         * Second, the 'latest' tag.
+         * Pushing multiple tags is cheap, as all the layers are reused. */
+        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+            app.push("${env.BUILD_NUMBER}")
+            app.push("latest")
+        }
+    }
 }
-

@@ -1,6 +1,6 @@
 # First stage is the build environment
 FROM sgrio/java-oracle:jdk_8 as builder
-MAINTAINER Jonathan Hart <jono@opennetworking.org>
+MAINTAINER Mohd Jahangir<mohd.jahangir@hotmail.com>
 
 # Set the environment variables
 ENV HOME /root
