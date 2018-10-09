@@ -1,6 +1,6 @@
 #!groovy
 
-pipeline { /* This is required to distribute the work to nodes */
+node { /* This is required to distribute the work to nodes */
 	def app
 	
      stage('Clone Repo') {
@@ -9,19 +9,16 @@ pipeline { /* This is required to distribute the work to nodes */
      }
 
         stage('build ONOS') {
-            steps {
                 sh '''#!/bin/bash -l
                     ONOS_ROOT=`pwd`
                     source tools/build/envDefaults
                     bazel build onos
                 '''
-            }
         }
 	
      stage('Unit Test image') {
         /* Ideally, we would run a test framework against our image.
          * For this example, we're using a Volkswagen-type approach ;-) */
-		 steps {
 		 	parallel (
                     "unit-tests": {
                         sh '''#!/bin/bash -l
@@ -37,8 +34,7 @@ pipeline { /* This is required to distribute the work to nodes */
                             bazel build //docs:external //docs:internal --show-output
                         '''
                     },
-			)
-		 }
+	     )
     }
 	
     stage('Build docker image') {
