@@ -12,7 +12,7 @@ node { /* This is required to distribute the work to nodes */
                 sh '''#!/bin/bash -l
                     ONOS_ROOT=`pwd`
                     source tools/build/envDefaults
-                    bazel build onos
+                    onos-buck build onos
                 '''
         }
 	
@@ -24,14 +24,14 @@ node { /* This is required to distribute the work to nodes */
                         sh '''#!/bin/bash -l
                             ONOS_ROOT=`pwd`
                             source tools/build/envDefaults
-                            bazel query 'tests(//...)' | xargs bazel test
+                            onos-buck test
                         '''
                     },
                     "javadocs": {
                         sh '''#!/bin/bash -l
                             ONOS_ROOT=`pwd`
                             source tools/build/envDefaults
-                            bazel build //docs:external //docs:internal --show-output
+                            onos-buck build //docs:external //docs:internal --show-output
                         '''
                     },
 	     )
