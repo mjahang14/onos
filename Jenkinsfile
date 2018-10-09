@@ -1,6 +1,6 @@
 #!groovy
 
-node { /* This is required to distribute the work to nodes */
+pipeline { /* This is required to distribute the work to nodes */
 	def app
 	
      stage('Clone Repo') {
